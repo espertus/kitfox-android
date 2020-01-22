@@ -7,7 +7,7 @@
     android:paddingRight="32dp">
 
     <TextView
-        android:id="@+id/message_text"
+        android:id="@+id/messageText"
         android:layout_width="350dp"
         android:layout_height="wrap_content"
         android:background="@drawable/outgoing_message_background"

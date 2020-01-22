@@ -47,11 +47,10 @@ import java.util.*
  * Kitfox main activity.
  */
 class MainActivity : Activity() {
-    private var session: GeckoSession? = null
-    private var runtime: GeckoRuntime? = null
+    private lateinit var session: GeckoSession
+    private lateinit var runtime: GeckoRuntime
     private lateinit var speechService: MozillaSpeechService
-    private var chatArrayAdapter: ChatArrayAdapter? = null
-
+    private lateinit var chatArrayAdapter: ChatArrayAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -79,29 +78,30 @@ class MainActivity : Activity() {
         }
         session = GeckoSession()
         runtime = GeckoRuntime.create(this)
-        session!!.open(runtime!!)
-        geckoView.setSession(session!!)
-        session!!.loadUri(HOME_PAGE)
+        session.open(runtime)
+        geckoView.setSession(session)
+        session.loadUri(HOME_PAGE)
         chatArrayAdapter = ChatArrayAdapter(applicationContext, R.layout.incoming_message)
-        chatView.setAdapter(chatArrayAdapter)
+        chatView.adapter = chatArrayAdapter
+
         /**
          * Navigate to URL or send message on submit.
          */
-        urlBar?.setOnEditorActionListener(OnEditorActionListener { view, actionId, event ->
+        urlBar?.setOnEditorActionListener(OnEditorActionListener { view, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
-                val url = urlBar.getText().toString()
-                if (url.length == 0) {
+                val url = urlBar.text.toString()
+                if (url.isEmpty()) {
                     return@OnEditorActionListener false
                 }
                 // Navigate to URL or submit chat message
                 if (URLUtil.isValidUrl(url) && url.contains(".")) {
                     showWebView()
-                    session!!.loadUri(url)
+                    session.loadUri(url)
                 } else if (URLUtil.isValidUrl("http://$url") && url.contains(".")) {
                     showWebView()
-                    session!!.loadUri("http://$url")
+                    session.loadUri("http://$url")
                 } else {
-                    val message = urlBar.getText().toString()
+                    val message = urlBar.text.toString()
                     urlBar.setText("")
                     showChatView()
                     showChatMessage(false, message)
@@ -116,29 +116,29 @@ class MainActivity : Activity() {
             }
             false
         })
+
         val speechListener = ISpeechRecognitionListener { aState, aPayload ->
             runOnUiThread {
                 when (aState) {
                     SpeechState.DECODING -> {
                         // Handle when the speech object changes to decoding state
                         speakButton.setImageResource(R.drawable.speak_button)
-                        speakButton.setVisibility(View.GONE)
-                        loadingSpinner.setVisibility(View.VISIBLE)
-                        println("*** Decoding...")
+                        speakButton.visibility = View.GONE
+                        loadingSpinner.visibility = View.VISIBLE
+                        Log.d(TAG, "*** Decoding...")
                     }
                     SpeechState.MIC_ACTIVITY -> {
                         // Captures the activity from the microphone
-                        val db = aPayload as Double * -1
-                        println("*** Mic activity: " + java.lang.Double.toString(db))
+                        val db = - (aPayload as Double)
+                        Log.d(TAG,"*** Mic activity: $db")
                     }
                     SpeechState.STT_RESULT -> {
                         // When the api finished processing and returned a hypothesis
-                        loadingSpinner.setVisibility(View.GONE)
-                        speakButton.setVisibility(View.VISIBLE)
-                        val transcription =
-                            (aPayload as STTResult).mTranscription
+                        loadingSpinner.visibility = View.GONE
+                        speakButton.visibility = View.VISIBLE
+                        val transcription = (aPayload as STTResult).mTranscription
                         val confidence = aPayload.mConfidence
-                        println("*** Result: $transcription")
+                        Log.d(TAG, "*** Result: $transcription ($confidence)")
                         showChatView()
                         showChatMessage(false, transcription)
                         sendChatMessage(transcription)
@@ -146,23 +146,22 @@ class MainActivity : Activity() {
                     SpeechState.START_LISTEN -> {
                         // Handle when the api successfully opened the microphone and started listening
                         speakButton.setImageResource(R.drawable.speak_button_active)
-                        println("*** Listening...")
+                        Log.d(TAG, "*** Listening...")
                     }
                     SpeechState.NO_VOICE ->  // Handle when the api didn't detect any voice
-                        println("*** No voice detected.")
+                        Log.d(TAG, "*** No voice detected.")
                     SpeechState.CANCELED -> {
                         // Handle when a cancellation was fully executed
                         speakButton.setImageResource(R.drawable.speak_button)
-                        loadingSpinner.setVisibility(View.GONE)
-                        speakButton.setVisibility(View.VISIBLE)
-                        println("*** Cancelled.")
+                        loadingSpinner.visibility = View.GONE
+                        speakButton.visibility = View.VISIBLE
+                        Log.d(TAG, "*** Cancelled.")
                     }
                     SpeechState.ERROR -> {
                         // Handle when any error occurred
                         speakButton.setImageResource(R.drawable.speak_button)
-                        loadingSpinner.setVisibility(View.GONE)
-                        speakButton.setVisibility(View.VISIBLE)
-                        //string error = aPayload;
+                        loadingSpinner.visibility = View.GONE
+                        speakButton.visibility = View.VISIBLE
                         println("*** Error: $aPayload")
                     }
                     else -> {
@@ -175,7 +174,7 @@ class MainActivity : Activity() {
         speechService.addListener(speechListener)
         speakButton.setOnClickListener(View.OnClickListener {
             speechService.start(applicationContext)
-            println("*** Speak button clicked")
+            Log.d(TAG, "*** Speak button clicked")
         })
     }
 
@@ -186,64 +185,64 @@ class MainActivity : Activity() {
      */
     fun goHome(view: View?) {
         showWebView()
-        session!!.loadUri(HOME_PAGE)
-        urlBar!!.setText("")
+        session.loadUri(HOME_PAGE)
+        urlBar.setText("")
     }
 
     /**
      * Show web view.
      */
     private fun showWebView() {
-        chatView!!.visibility = View.GONE
-        geckoView!!.visibility = View.VISIBLE
+        chatView.visibility = View.GONE
+        geckoView.visibility = View.VISIBLE
     }
 
     /**
      * Show chat view.
      */
     private fun showChatView() {
-        geckoView!!.visibility = View.GONE
-        chatView!!.visibility = View.VISIBLE
+        geckoView.visibility = View.GONE
+        chatView.visibility = View.VISIBLE
     }
 
     /**
      * Show a message in the chat UI.
      */
     private fun showChatMessage(direction: Boolean, message: String) {
-        chatArrayAdapter!!.add(ChatMessage(direction, message))
+        chatArrayAdapter.add(ChatMessage(direction, message))
     }
 
     /**
      * Send a message to the Kitfox server.
      */
     private fun sendChatMessage(message: String) { // Build URL
-        val commandsUrl: String = KITFOX_SERVER + "/commands"
         // Build body
-        val properties: MutableMap<String?, String?> =
-            HashMap()
+        val properties: MutableMap<String?, String?> =  HashMap()
         properties["text"] = message
         val bodyObject = JSONObject(properties)
         val body = jsonObjectToByteBuffer(bodyObject)
+
         // Build request
-        val builder = WebRequest.Builder(commandsUrl)
+        val builder = WebRequest.Builder(COMMANDS_URL)
         builder.method("POST")
         builder.header("Content-Type", "application/json")
         builder.body(body)
         val request = builder.build()
+
         // Send request
-        val executor = GeckoWebExecutor(runtime!!)
+        val executor = GeckoWebExecutor(runtime)
         val result = executor.fetch(request)
+
         // Handle response
-        result.then(object : OnValueListener<WebResponse, Void> {
-            override fun onValue(response: WebResponse?): GeckoResult<Void>? {
-                if (response != null) handleMessageResponse(response)
-                return null
-            }
+        result.then(OnValueListener<WebResponse, Void> { response ->
+            if (response != null) handleMessageResponse(response)
+            null
         }, OnExceptionListener {
             Log.e("Kitfox", "Exception with response from server")
             null
         })
     }
+
 
     /**
      * Handle a response from the Kitfox server.
@@ -252,41 +251,48 @@ class MainActivity : Activity() {
      */
     private fun handleMessageResponse(response: WebResponse) { // Detect error responses
         if (response.statusCode != 200) {
-            Log.e("Kitfox", "Received bad response from server " + response.statusCode)
+            Log.e(TAG, "Received bad response from server " + response.statusCode)
             return
         }
+
         // Parse response
         val jsonResponse = inputStreamToJsonObject(response.body)
-        var method: String? = null
-        var url: String? = null
-        var text: String? = null
-        try {
-            method = jsonResponse.getString("method")
+
+        val method = try {
+            jsonResponse?.getString("method")
         } catch (exception: JSONException) {
+            null
         }
-        try {
-            url = jsonResponse.getString("url")
+
+        val url = try {
+            jsonResponse?.getString("url")
         } catch (exception: JSONException) {
+            null
         }
-        try {
-            text = jsonResponse.getString("text")
+
+        val text = try {
+            jsonResponse?.getString("text")
         } catch (exception: JSONException) {
+            null
         }
+
         // If a textual response is provided, show it in chat
-        if (text != null && text.length > 0) {
+        if (text != null && text.isNotEmpty()) {
             showChatMessage(true, text)
         } else {
-            Log.i("Kitfox", "No text response provided by server.")
+            Log.d(TAG, "No text response provided by server.")
         }
+
         if (method == null || url == null) {
-            Log.i("Kitfox", "No method or URL provided by server.")
+            Log.d(TAG, "No method or URL provided by server.")
             return
         }
+
         // If a GET action with a URL is provided, navigate to it
-        if (method.toUpperCase() == "GET" && url.length > 0) {
-            session!!.loadUri(url)
+        if (method.toUpperCase() == "GET" && url.isNotEmpty()) {
+            session.loadUri(url)
             // Wait a couple of seconds before showing the WebView
-            object : CountDownTimer(2000, 2000) {
+            object : CountDownTimer(GET_URL_DELAY, GET_URL_DELAY) {
                 override fun onTick(m: Long) {}
                 override fun onFinish() {
                     showWebView()
@@ -301,9 +307,8 @@ class MainActivity : Activity() {
      * @param object A JSONObject to be converted
      * @return ByteBuffer A ByteBuffer to be sent via fetch()
      */
-    private fun jsonObjectToByteBuffer(`object`: JSONObject): ByteBuffer {
-        val string = `object`.toString()
-        val charBuffer = CharBuffer.wrap(string)
+    private fun jsonObjectToByteBuffer(obj: JSONObject): ByteBuffer {
+        val charBuffer = CharBuffer.wrap(obj.toString())
         val byteBuffer = ByteBuffer.allocateDirect(charBuffer.length)
         Charset.forName("UTF-8").newEncoder().encode(charBuffer, byteBuffer, true)
         return byteBuffer
@@ -315,36 +320,24 @@ class MainActivity : Activity() {
      * @param inputStream The InputStream to convert
      * @return JSONObject
      */
-    private fun inputStreamToJsonObject(inputStream: InputStream?): JSONObject {
-        var streamReader: BufferedReader? = null
-        // Try to decode input stream
-        try {
-            streamReader = BufferedReader(InputStreamReader(inputStream, "UTF-8"))
-        } catch (exception: UnsupportedEncodingException) {
-            Log.e("Kitfox", "Unsupported encoding from InputStream")
-        }
-        val stringBuilder = StringBuilder()
-        var inputString: String?
-        try {
-            while (streamReader!!.readLine().also {
-                    inputString = it
-                } != null) stringBuilder.append(inputString)
-        } catch (exception: IOException) {
-            Log.e("Kitfox", "I/O exception while reading InputStream")
-        }
+    private fun inputStreamToJsonObject(inputStream: InputStream?): JSONObject? {
+        val streamReader = inputStream?.bufferedReader()
+        val inputString = streamReader?.use(BufferedReader::readText)
+
         // Try to parse string as JSON
-        val string = stringBuilder.toString()
-        var `object` = JSONObject()
-        try {
-            `object` = JSONObject(string)
+        return try {
+            JSONObject(inputString)
         } catch (exception: JSONException) {
-            Log.e("Kitfox", "Invalid JSON")
+            Log.e(TAG, "Invalid JSON")
+            null
         }
-        return `object`
     }
 
     companion object {
+        private const val TAG = "MainActivity"
         private const val HOME_PAGE = "http://kitfox.tola.me.uk"
         private const val KITFOX_SERVER = "http://kitfox.tola.me.uk"
+        private const val COMMANDS_URL = "$KITFOX_SERVER/commands"
+        private const val GET_URL_DELAY = 2000L // ms
     }
 }

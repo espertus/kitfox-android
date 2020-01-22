@@ -11,6 +11,6 @@ class ChatMessage
  *
  * @param direction Incoming (true) or outgoing (false)
  * @param messageText The text of the message sent/received
- */(// true is incoming, false is outgoing
-    var direction: Boolean, var messageText: String
+ */(
+    val direction: Boolean, val messageText: String
 )

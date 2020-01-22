@@ -15,7 +15,6 @@ import java.util.*
  */
 class ChatArrayAdapter(private val chatContext: Context, textViewResourceId: Int) :
     ArrayAdapter<ChatMessage>(chatContext, textViewResourceId) {
-    private var messageText: TextView? = null
     private val chatMessageList: MutableList<ChatMessage> =
         ArrayList()
 
@@ -38,15 +37,13 @@ class ChatArrayAdapter(private val chatContext: Context, textViewResourceId: Int
         parent: ViewGroup
     ): View {
         val chatMessageObject = getItem(position)
-        val inflater =
-            getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
-        val row = if (chatMessageObject.direction) {
-            inflater.inflate(R.layout.incoming_message, parent, false)
-        } else {
-            inflater.inflate(R.layout.outgoing_message, parent, false)
-        }
-        messageText = row.findViewById<View>(R.id.message_text) as TextView
-        messageText!!.text = chatMessageObject.messageText
+        val inflater = chatContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+        val row = inflater.inflate(
+            if (chatMessageObject.direction) R.layout.incoming_message else R.layout.outgoing_message,
+            parent,
+            false
+        )
+        row.findViewById<TextView>(R.id.messageText).text = chatMessageObject.messageText
         return row
     }
 }
