@@ -12,14 +12,14 @@
 
 
     <org.mozilla.geckoview.GeckoView
-        android:id="@+id/geckoview"
+        android:id="@+id/geckoView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1">
     </org.mozilla.geckoview.GeckoView>
 
     <ListView
-        android:id="@+id/chat_view"
+        android:id="@+id/chatView"
         android:layout_width="fill_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
@@ -39,7 +39,7 @@
         android:background="#e9e9ea">
 
         <ImageButton
-            android:id="@+id/home_button"
+            android:id="@+id/homeButton"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_marginLeft="8dp"
@@ -60,7 +60,7 @@
             android:gravity="center_vertical">
 
             <ImageButton
-                android:id="@+id/speak_button"
+                android:id="@+id/speakButton"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:layout_marginLeft="0dp"
@@ -71,7 +71,7 @@
                 android:src="@drawable/speak_button" />
 
             <ProgressBar
-                android:id="@+id/loading_spinner"
+                android:id="@+id/loadingSpinner"
                 style="?android:attr/progressBarStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -84,7 +84,7 @@
                 android:visibility="gone" />
 
             <EditText
-                android:id="@+id/urlbar"
+                android:id="@+id/urlBar"
                 android:layout_width="wrap_content"
                 android:layout_height="32dp"
                 android:layout_weight="1"
@@ -97,7 +97,7 @@
         </LinearLayout>
 
         <ImageButton
-            android:id="@+id/overflow_button"
+            android:id="@+id/overflowButton"
             android:layout_width="48dp"
             android:layout_height="24dp"
             android:layout_marginLeft="4dp"
